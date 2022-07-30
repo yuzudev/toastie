@@ -4,7 +4,7 @@ import { config } from "dotenv"
 import { commands } from "./cache.js"
 import { load } from "./handle-commands.js"
 
-PREFIX="~"
+PREFIX ="~"
 
 _files = []
 
@@ -17,6 +17,13 @@ intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.
 session = new Biscuit token: process.env.TOKEN, intents: intents
 
 session.events.on "ready", (ready) ->
+    toSend = for command from commands.values() then {
+        name: command.name
+        description: command.description
+    }
+
+    session.upsertApplicationCommands toSend
+
     console.log "Logged in as %s!!", ready.user.username
 
     activities = [
@@ -28,8 +35,13 @@ session.events.on "ready", (ready) ->
     for shard from session.ws.agent.shards.values()
         session.editStatus shard.id, status: StatusTypes.online, activities: activities
 
+session.events.on "interactionCreate", (interaction) ->
+    if interaction.isCommand()
+        command = commands.get interaction.commandName
+        command?.execute session: session, context: interaction
+
 session.events.on "messageCreate", (message) ->
-    if message.author.bot
+    if message.author?.bot
         return
 
     if not message.content.startsWith PREFIX
@@ -39,10 +51,6 @@ session.events.on "messageCreate", (message) ->
     name = args.shift()?.toLowerCase()
 
     command = commands.get name
-
-    if not command then return
-
-    if command.name is "ping"
-       command.execute session: session, context: message
+    command?.execute session: session, context: message
 
 do session.start
