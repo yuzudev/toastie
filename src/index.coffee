@@ -1,7 +1,7 @@
 import { Biscuit, StatusTypes } from "@biscuitland/core"
 import { ActivityTypes, GatewayIntents } from "@biscuitland/api-types"
 import { config } from "dotenv"
-import { commands } from "./cache.js"
+import { attachments, commands } from "./cache.js"
 import { load } from "./handle-commands.js"
 
 PREFIX ="~"
@@ -41,6 +41,14 @@ session.events.on "interactionCreate", (interaction) ->
         command?.execute session: session, context: interaction
 
 session.events.on "messageCreate", (message) ->
+    # attachments
+    if message.attachments.length > 0
+        attachments.set message.channelId, message.attachments.map (att) -> att.attachment
+
+    if message.embeds.length > 0
+        attachments.set message.channelId, message.embeds.map (em) -> em.image.url
+
+    # commands
     if message.author?.bot
         return
 
