@@ -1,6 +1,15 @@
 import { Biscuit, StatusTypes } from "@biscuitland/core"
 import { ActivityTypes, GatewayIntents } from "@biscuitland/api-types"
 import { config } from "dotenv"
+import { commands } from "./cache.js"
+import { load } from "./handle-commands.js"
+
+PREFIX="~"
+
+files = []
+
+for await file from load "#{process.cwd()}/dist/commands"
+    files.push file
 
 config debug: on
 
@@ -20,6 +29,20 @@ session.events.on "ready", (ready) ->
         session.editStatus shard.id, status: StatusTypes.online, activities: activities
 
 session.events.on "messageCreate", (message) ->
-    if message.content.startsWith "!ping" then message.reply content: "pong!"
+    if message.author.bot
+        return
+
+    if not message.content.startsWith PREFIX
+        return
+
+    args = message.content.substring(PREFIX.length).trim().split /\s+/gm
+    name = args.shift()?.toLowerCase()
+
+    command = commands.get name
+
+    if not command then return
+
+    if command.name is "ping"
+       command.execute session: session, context: message
 
 do session.start
