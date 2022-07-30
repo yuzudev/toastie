@@ -4,7 +4,14 @@ import { config } from "dotenv"
 import { attachments, commands } from "./cache.js"
 import { load } from "./handle-commands.js"
 
-PREFIX ="~"
+# POLYFILLS
+
+if not globalThis.Blob
+    await import("node:buffer").then ({ Blob }) -> globalThis.Blob = Blob
+
+# END POLYFILLS
+
+PREFIX = "%"
 
 _files = []
 
@@ -14,7 +21,7 @@ for await file from load "#{process.cwd()}/dist/commands", console.debug
 config debug: on
 
 intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
-session = new Biscuit token: process.env.TOKEN, intents: intents
+session = new Biscuit token: process.env.TOASTIE_TOKEN, intents: intents
 
 session.events.on "ready", (ready) ->
     toSend = for command from commands.values() then {
