@@ -6,10 +6,10 @@ import { load } from "./handle-commands.js"
 
 PREFIX="~"
 
-files = []
+_files = []
 
 for await file from load "#{process.cwd()}/dist/commands"
-    files.push file
+    _files.push file
 
 config debug: on
 

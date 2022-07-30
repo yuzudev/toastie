@@ -1,7 +1,6 @@
-import { commands } from "../cache.js"
+import { createCommand } from "../create-command.js"
 
-commands.set "ping", {
-    name: "ping",
-    execute: ({ session, context }) ->
-        context.reply content: "pong!"
+createCommand {
+    name: "ping"
+    execute: ({ session, context }) -> context.reply content: "pong!"
 }
