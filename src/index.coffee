@@ -8,7 +8,7 @@ PREFIX ="~"
 
 _files = []
 
-for await file from load "#{process.cwd()}/dist/commands"
+for await file from load "#{process.cwd()}/dist/commands", console.debug
     _files.push file
 
 config debug: on

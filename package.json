@@ -13,7 +13,8 @@
   "license": "MIT",
   "dependencies": {
     "@biscuitland/core": "^1.0.2",
-    "dotenv": "^16.0.1"
+    "dotenv": "^16.0.1",
+    "imagescript": "^1.2.9"
   },
   "devDependencies": {
     "coffeescript": "^2.7.0"
