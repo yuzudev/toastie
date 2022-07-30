@@ -4,17 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-      "build": "coffee -o dist/ -c src/",
-      "start": "node --no-warnings ./dist/index.js",
-      "dev": "npm run build && npm run start"
+    "build": "coffee -o dist/ -c src/",
+    "start": "node --no-warnings ./dist/index.js",
+    "dev": "npm run build && npm run start"
   },
   "keywords": [],
   "author": "Yuzu",
   "license": "MIT",
   "dependencies": {
-    "@biscuitland/core": "^1.0.2"
+    "@biscuitland/core": "^1.0.2",
+    "dotenv": "^16.0.1"
   },
   "devDependencies": {
     "coffeescript": "^2.7.0"
-  }
+  },
+  "type": "module"
 }
