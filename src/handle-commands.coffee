@@ -1,8 +1,10 @@
 import fs from "node:fs"
 
-export load = (path) ->
+export load = (path, logFn) ->
     filenames = await fs.promises.readdir path
-    yield from filenames.map (s) -> import("#{path}/#{s}")
+    for fname in filenames
+        if fs.lstatSync("#{path}/#{fname}").isDirectory()
+            load "#{path}/#{fname}"
 
-export loadFromCWD = (relativePath) ->
-    load "#{process.cwd()}#{relativePath}"
+        logFn? fname
+        yield import("#{path}/#{fname}")
