@@ -68,9 +68,9 @@ app.all "*", (req, reply) ->
             new Response JSON.stringify { error: "Method not allowed." }, { status: 405 }
         )
 
-    json = await req.json()
+    json = JSON.parse req.body
 
-    session.events.raw session, json.data, json.shardId
+    Actions.raw session, json.data, json.shardId
 
     if json.data.t and json.data.t isnt "RESUMED"
         unless ["READY", "GUILD_LOADED_DD"].includes json.data.t then return
