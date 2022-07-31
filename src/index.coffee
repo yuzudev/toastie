@@ -70,11 +70,12 @@ app.all "*", (req, reply) ->
 
     json = JSON.parse req.body
 
-    Actions.raw session, json.data, json.shardId
+    Actions.raw session, json.shardId, json.data
 
-    if json.data.t and json.data.t isnt "RESUMED"
-        unless ["READY", "GUILD_LOADED_DD"].includes json.data.t then return
-        Actions[json.data.t]? session, json.data, json.shardId
+    if not json.data.t or not json.data.t
+        return
+
+    Actions[json.data.t]? session, json.shardId, json.data.d
 
     req.reply(
         new Response undefined, status: 204
