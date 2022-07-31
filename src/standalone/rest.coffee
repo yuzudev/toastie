@@ -4,7 +4,7 @@ import "dotenv/config"
 
 manager = new DefaultRestAdapter {
     url: "http://localhost:#{process.env.REST_PORT}"
-    token: process.env.GW_TOKEN
+    token: process.env.GW_AUTH
     version: 10
 }
 

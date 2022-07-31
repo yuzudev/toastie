@@ -1,7 +1,8 @@
-import { Biscuit, StatusTypes } from "@biscuitland/core"
+import { Actions, Biscuit, StatusTypes } from "@biscuitland/core"
 import { ActivityTypes, GatewayIntents } from "@biscuitland/api-types"
 import { attachments, commands } from "./cache.js"
 import { load } from "./handle-commands.js"
+import Fastify from "fastify"
 import "dotenv/config"
 import "./util/polyfill.js"
 
@@ -60,4 +61,33 @@ session.events.on "messageCreate", (message) ->
     command = commands.get name
     command?.execute session: session, context: message
 
-do session.start
+# "web" server!
+
+app = Fastify {}
+app.all "*", (req, reply) ->
+    if not process.env.GW_PORT or not req.headers.get "Authorization"
+        return req.reply(
+            new Response JSON.stringify { error: "Invalid secret key." }, { status: 401 }
+        )
+
+    if req.method isnt "post"
+        return req.reply(
+            new Response JSON.stringify { error: "Method not allowed." }, { status: 405 }
+        )
+
+    json = await req.json()
+
+    session.events.raw bot, json.data, json.shardId
+
+    if json.data.t and json.data.t isnt "RESUMED"
+        unless ["READY", "GUILD_LOADED_DD"].includes json.data.t then return
+        Actions[json.data.t]? session, json.data, json.shardId
+
+    req.reply(
+        new Response undefined, status: 204
+    )
+
+app.listen port: process.env.GW_PORT
+
+
+# do session.start
