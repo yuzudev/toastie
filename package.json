@@ -14,6 +14,7 @@
   "dependencies": {
     "@biscuitland/core": "^1.0.2",
     "dotenv": "^16.0.1",
+    "fastify": "^4.3.0",
     "imagescript": "^1.2.9"
   },
   "devDependencies": {
