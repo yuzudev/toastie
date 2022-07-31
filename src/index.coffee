@@ -16,15 +16,13 @@ for await file from load "#{process.cwd()}/dist/commands", console.debug
 intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
 session = new Biscuit token: process.env.GW_AUTH, intents: intents
 
-session.events.on "ready", (ready) ->
+artificialReady = ->
     toSend = for command from commands.values() then {
         name: command.name
         description: command.description
     }
 
     session.upsertApplicationCommands toSend
-
-    console.log "Logged in as %s!!", ready.user.username
 
     activities = [
         name: "toasts 🍞"
@@ -70,7 +68,7 @@ app.all "*", (req, reply) ->
             new Response JSON.stringify { error: "Invalid secret key." }, { status: 401 }
         )
 
-    if req.method isnt "post"
+    if req.method isnt "POST"
         return req.reply(
             new Response JSON.stringify { error: "Method not allowed." }, { status: 405 }
         )
@@ -88,6 +86,7 @@ app.all "*", (req, reply) ->
     )
 
 app.listen port: process.env.GW_PORT
+    .then () -> do artificialReady
 
 
 # do session.start
