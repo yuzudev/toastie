@@ -8,6 +8,7 @@ intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.
 restManager = new DefaultRestAdapter {
     url: "http://localhost:#{process.env.REST_PORT}"
     token: process.env.GW_AUTH
+    version: 10
 }
 
 config = await restManager.get "/gateway/bot"
@@ -21,6 +22,9 @@ config = await restManager.get "/gateway/bot"
             maxConcurrency: res.session_start_limit.max_concurrency,
 
 wsManager = new DefaultWsAdapter {
+    token: process.env.GW_AUTH
+    intents: intents
+
     gatewayConfig:
         token: process.env.GW_AUTH
         intents: intents

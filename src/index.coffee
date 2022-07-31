@@ -6,7 +6,7 @@ import Fastify from "fastify"
 import "dotenv/config"
 import "./util/polyfill.js"
 
-PREFIX = "%"
+PREFIX = "%%"
 
 _files = []
 
@@ -63,11 +63,6 @@ session.events.on "messageCreate", (message) ->
 
 app = Fastify {}
 app.all "*", (req, reply) ->
-    if not process.env.GW_PORT or not req.headers.get "Authorization"
-        return req.reply(
-            new Response JSON.stringify { error: "Invalid secret key." }, { status: 401 }
-        )
-
     if req.method isnt "POST"
         return req.reply(
             new Response JSON.stringify { error: "Method not allowed." }, { status: 405 }
@@ -85,8 +80,8 @@ app.all "*", (req, reply) ->
         new Response undefined, status: 204
     )
 
-app.listen port: process.env.GW_PORT
-    .then () -> do artificialReady
+await app.listen port: process.env.GW_PORT
+await artificialReady
 
 
 # do session.start
