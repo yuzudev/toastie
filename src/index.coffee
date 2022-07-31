@@ -6,12 +6,10 @@ import Fastify from "fastify"
 import "dotenv/config"
 import "./util/polyfill.js"
 
-PREFIX = "%%"
+PREFIX = "%"
 
-_files = []
-
-for await file from load "#{process.cwd()}/dist/commands", console.debug
-    _files.push file
+files = new Set
+files.add file for await file from load "#{process.cwd()}/dist/commands", console.debug
 
 intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
 session = new Biscuit token: process.env.GW_AUTH, intents: intents
@@ -82,6 +80,5 @@ app.all "*", (req, reply) ->
 
 await app.listen port: process.env.GW_PORT
 await artificialReady
-
 
 # do session.start
