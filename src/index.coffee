@@ -72,8 +72,7 @@ app.all "*", (req, reply) ->
 
     Actions.raw session, json.shardId, json.data
 
-    if not json.data.t or not json.data.t
-        return
+    unless json.data.t or json.data.d then return
 
     Actions[json.data.t]? session, json.shardId, json.data.d
 
