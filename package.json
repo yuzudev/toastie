@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "coffee -o dist/ -c src/",
-    "start": "node --no-warnings ./dist/index.js",
-    "dev": "npm run build && npm run start"
+    "gateway": "node --no-warnings ./dist/standalone/ws.js",
+    "rest": "node --no-warnings ./dist/standalone/rest.js",
+    "bot": "node --no-warnings ./dist/index.js",
+    "build": "coffee -o dist/ -c src/"
   },
   "keywords": [],
   "author": "Yuzu",
   "license": "MIT",
   "dependencies": {
-    "@biscuitland/core": "^1.0.2",
+    "@biscuitland/core": "^1.1.0",
     "dotenv": "^16.0.1",
     "fastify": "^4.3.0",
     "imagescript": "^1.2.9"
