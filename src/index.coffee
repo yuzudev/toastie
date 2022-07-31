@@ -70,7 +70,7 @@ app.all "*", (req, reply) ->
 
     json = await req.json()
 
-    session.events.raw bot, json.data, json.shardId
+    session.events.raw session, json.data, json.shardId
 
     if json.data.t and json.data.t isnt "RESUMED"
         unless ["READY", "GUILD_LOADED_DD"].includes json.data.t then return
