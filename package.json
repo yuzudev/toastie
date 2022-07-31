@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "gateway": "node --no-warnings ./dist/standalone/ws.js",
-    "rest": "node --no-warnings ./dist/standalone/rest.js",
-    "bot": "node --no-warnings ./dist/index.js",
+    "gateway": "node --no-warnings --experimental-fetch ./dist/standalone/ws.js --input-type module",
+    "rest": "node --no-warnings --experimental-fetch ./dist/standalone/rest.js --input-type module",
+    "bot": "node --no-warnings --experimental-fetch ./dist/index.js --input-type module",
     "build": "coffee -o dist/ -c src/"
   },
   "keywords": [],
