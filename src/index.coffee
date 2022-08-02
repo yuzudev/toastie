@@ -64,16 +64,19 @@ session.events.on "interactionCreate", (interaction) ->
         command = commands.get interaction.commandName
         command?.execute session: session, context: interaction
 
-removeAccents = (str) -> str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+
+is1stApril = (date) -> date.getDay() is 1 and date.getMonth() + 1 is 4
 
 session.events.on "messageCreate", (message) ->
-    # que-so bot
-    plainContent = removeAccents message.content
+    if is1stApril(new Date())
+        removeAccents = (str) -> str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
 
-    console.log "content: %s", plainContent
+        plainContent = removeAccents message.content
 
-    if plainContent.endsWith "que"
-        message.reply content: "so", messageReference: messageId: message.id
+        console.log "content: %s", plainContent
+
+        if plainContent.endsWith "que"
+            message.reply content: "so", messageReference: messageId: message.id
 
     # attachments
     if message.attachments.length > 0
