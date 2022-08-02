@@ -1,18 +1,34 @@
 import { Actions, Biscuit, Message, StatusTypes } from "@biscuitland/core"
 import { ActivityTypes, GatewayIntents } from "@biscuitland/api-types"
+import { DefaultRestAdapter } from "@biscuitland/rest"
 import { attachments, commands } from "./cache.js"
 import { load } from "./handle-commands.js"
 import Fastify from "fastify"
 import "dotenv/config"
 import "./util/polyfill.js"
 
-PREFIX = "%%"
+{ PREFIX } = process.env
 
 files = new Set
 files.add file for await file from load "#{process.cwd()}/dist/commands", console.debug
 
-intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
-session = new Biscuit token: process.env.GW_AUTH, intents: intents
+rest = new DefaultRestAdapter {
+    url: "http://localhost:#{process.env.REST_PORT}"
+    token: process.env.GW_AUTH
+    version: 10
+}
+
+### No intents needed since we're not using the gateway
+intents = 0
+    | GatewayIntents.Guilds
+    | GatewayIntents.GuildMessages
+    | GatewayIntents.MessageContent
+###
+
+session = new Biscuit {
+    token: process.env.GW_AUTH
+    rest: rest
+}
 
 artificialReady = ->
     toSend = for command from commands.values() then {
@@ -22,6 +38,7 @@ artificialReady = ->
 
     session.upsertApplicationCommands toSend
 
+    ### TODO: open an endpoint to update the presence
     activities = [
         name: "toasts 🍞"
         type: ActivityTypes.Listening
@@ -30,10 +47,14 @@ artificialReady = ->
 
     for shard from session.ws.agent.shards.values()
         session.editStatus shard.id, status: StatusTypes.online, activities: activities
+    ###
 
 session.events.on "guildCreate", (guild) ->
+
+    # TODO: move this to some constant!
     channelId = "1002076190422614056"
 
+    # Usual way to send a message to a channel by looking at the id
     Message::reply.call { session: session, channelId: channelId }, {
         content: "Hey I just joined #{guild}!"
     }
@@ -74,8 +95,6 @@ session.events.on "messageCreate", (message) ->
     command = commands.get name
     command?.execute session: session, context: message
 
-# "web" server!
-
 app = Fastify {}
 app.all "*", (req, reply) ->
     if req.method isnt "POST"
@@ -95,7 +114,9 @@ app.all "*", (req, reply) ->
         new Response undefined, status: 204
     )
 
-await app.listen port: process.env.GW_PORT
-await artificialReady
+app.listen port: process.env.GW_PORT
+do artificialReady
 
-# do session.start
+### We don't have to start the bot since it's already running
+do session.start
+###
