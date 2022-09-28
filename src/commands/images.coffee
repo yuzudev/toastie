@@ -35,4 +35,8 @@ createCommand {
                 content: context.author.username
                 files: [{ blob: blob, name: "img.png" }]
             }
+        else
+            context.reply {
+                content: "Cannot use an interaction"
+            }
 }

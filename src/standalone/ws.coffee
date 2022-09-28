@@ -1,47 +1,50 @@
-import { DefaultWsAdapter } from "@biscuitland/ws"
-import { DefaultRestAdapter } from "@biscuitland/rest"
-import { GATEWAY_BOT, GatewayIntents } from "@biscuitland/api-types"
+###
+Standalone gateway process
+###
+
 import "dotenv/config"
 
-intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
+import { GatewayIntents } from "@biscuitland/api-types"
+import { DefaultRestAdapter } from "@biscuitland/rest"
+import { ShardManager } from "@biscuitland/ws"
 
-restManager = new DefaultRestAdapter {
-    url: "http://localhost:#{process.env.REST_PORT}"
+import WebSocket from "ws"
+
+rest = new DefaultRestAdapter {
     token: process.env.GW_AUTH
-    version: 10
 }
 
-config = await restManager.get "/gateway/bot"
-    .then (res) ->
-        url: res.url,
-        shards: res.shards,
-        sessionStartLimit:
-            total: res.session_start_limit.total,
-            remaining: res.session_start_limit.remaining,
-            resetAfter: res.session_start_limit.reset_after,
-            maxConcurrency: res.session_start_limit.max_concurrency,
+hb = undefined
+ws = undefined
 
-wsManager = new DefaultWsAdapter {
-    token: process.env.GW_AUTH
-    intents: intents
+ask = ->
+    ws = new WebSocket("ws://localhost:#{process.env.WS_PORT}")
+        .on "error", ->
+            ws?.close()
 
-    gatewayConfig:
-        token: process.env.GW_AUTH
-        intents: intents
+        .on "close", ->
+            unless hb then hb = setInterval (() -> ask()), 10000
 
-    handleDiscordPayload: (shard, data) ->
-        if data.t
-            await fetch "http://localhost:#{process.env.GW_PORT}", {
-                method: "POST"
-                body: JSON.stringify shardId: shard.id, data: data
-            }
-            .then (res) -> do res.text
-            .catch (err) -> null
-}
+        .on "open", ->
+            clearInterval(hb)
+            hb = undefined
 
-wsManager.options.gatewayBot = config
-wsManager.options.lastShardId = wsManager.options.gatewayBot.shards - 1
-wsManager.options.totalShards = wsManager.options.gatewayBot.shards
-wsManager.agent.options.totalShards = wsManager.options.gatewayBot.shards
+handle = (shard, payload) ->
+    payload = JSON.stringify id: shard.options.id, payload: payload
+    await ws.send payload if ws and ws.readyState is WebSocket.OPEN
 
-do wsManager.shards
+init = (gateway) ->
+    socket = new ShardManager {
+        config: {
+            token: process.env.GW_AUTH
+            intents: GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
+        }
+        gateway: gateway
+        handleDiscordPayload: handle
+    }
+
+    console.log "Open gateway"
+
+    socket.spawns()
+
+rest.get("/gateway/bot").then(init).catch(console.error)

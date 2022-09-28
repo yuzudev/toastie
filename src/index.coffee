@@ -3,7 +3,9 @@ import { ActivityTypes, GatewayIntents } from "@biscuitland/api-types"
 import { DefaultRestAdapter } from "@biscuitland/rest"
 import { attachments, commands } from "./cache.js"
 import { load } from "./handle-commands.js"
+
 import Fastify from "fastify"
+
 import "dotenv/config"
 import "./util/polyfill.js"
 
@@ -12,22 +14,12 @@ import "./util/polyfill.js"
 files = new Set
 files.add file for await file from load "#{process.cwd()}/dist/commands", console.debug
 
-rest = new DefaultRestAdapter {
-    url: "http://localhost:#{process.env.REST_PORT}"
-    token: process.env.GW_AUTH
-    version: 10
-}
-
-### No intents needed since we're not using the gateway
-intents = 0
-    | GatewayIntents.Guilds
-    | GatewayIntents.GuildMessages
-    | GatewayIntents.MessageContent
-###
-
 session = new Biscuit {
     token: process.env.GW_AUTH
-    rest: rest
+    rest: {
+        adapter: DefaultRestAdapter
+        options: url: "http://localhost:#{process.env.REST_PORT}"
+    }
 }
 
 artificialReady = ->
@@ -64,20 +56,7 @@ session.events.on "interactionCreate", (interaction) ->
         command = commands.get interaction.commandName
         command?.execute session: session, context: interaction
 
-
-is1stApril = (date) -> date.getDay() is 1 and date.getMonth() + 1 is 4
-
 session.events.on "messageCreate", (message) ->
-    if is1stApril(new Date())
-        removeAccents = (str) -> str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-
-        plainContent = removeAccents message.content
-
-        console.log "content: %s", plainContent
-
-        if plainContent.endsWith "que"
-            message.reply content: "so", messageReference: messageId: message.id
-
     # attachments
     if message.attachments.length > 0
         attachments.set message.channelId, message.attachments.map (att) -> att.attachment
@@ -98,27 +77,22 @@ session.events.on "messageCreate", (message) ->
     command = commands.get name
     command?.execute session: session, context: message
 
-app = Fastify {}
-app.all "*", (req, reply) ->
-    if req.method isnt "POST"
-        return req.reply(
-            new Response JSON.stringify { error: "Method not allowed." }, { status: 405 }
-        )
+app = new WebSocketServer {
+    port: Number.parseInt process.env.WS_PORT
+}
 
-    json = JSON.parse req.body
+textDecoder = new TextDecoder()
 
-    Actions.raw session, json.shardId, json.data
+app.on "connection", (ws) ->
+    ws.on "message", (uint ### buffer or array buffer ###) ->
+        decompressable = new Uint8Array uint
+        data = JSON.parse textDecoder.decode decompressable
 
-    unless json.data.t or json.data.d then return
+        Actions["raw"] session, data.id, data.payload
 
-    Actions[json.data.t]? session, json.shardId, json.data.d
+        return if not data.payload.t or not data.payload.d
 
-    req.reply(
-        new Response undefined, status: 204
-    )
-
-app.listen port: process.env.GW_PORT
-do artificialReady
+        Actions[data.payload.t]? session, data.id, data.payload.d
 
 ### We don't have to start the bot since it's already running
 do session.start
